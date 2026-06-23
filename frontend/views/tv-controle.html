@@ -1,0 +1,288 @@
+<div class="space-y-4" id="tv-controle-root">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div class="space-y-1">
+      <h2 class="text-base md:text-lg font-semibold text-slate-100">
+        <i class="fa-solid fa-tv text-emerald-400 mr-2"></i>Controle de TV
+      </h2>
+      <p class="text-[0.7rem] md:text-xs text-slate-400">Gerencie ambientes, TVs, conteúdos e playlists de digital signage.</p>
+    </div>
+    <a href="tvwall.html" target="_blank" class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-medium px-3 py-2">
+      <i class="fa-solid fa-table-cells-large"></i> Abrir painel de TVs
+    </a>
+  </div>
+
+  <!-- Abas -->
+  <div class="flex gap-1 border-b border-slate-800 text-xs">
+    <button class="tv-tab-btn px-4 py-2 rounded-t-lg font-medium text-slateald-100 bg-slate-800 border-b-2 border-emerald-400" data-tv-tab="ambientes">Ambientes</button>
+    <button class="tv-tab-btn px-4 py-2 rounded-t-lg text-slate-400 hover:bg-slate-800" data-tv-tab="tvs">TVs</button>
+    <button class="tv-tab-btn px-4 py-2 rounded-t-lg text-slate-400 hover:bg-slate-800" data-tv-tab="grupos">Grupos (Video Wall)</button>
+    <button class="tv-tab-btn px-4 py-2 rounded-t-lg text-slate-400 hover:bg-slate-800" data-tv-tab="conteudos">Conteúdos</button>
+    <button class="tv-tab-btn px-4 py-2 rounded-t-lg text-slate-400 hover:bg-slate-800" data-tv-tab="playlists">Playlists</button>
+  </div>
+
+  <!-- ── Tab: Ambientes ─────────────────────────────────────────── -->
+  <div id="tv-tab-ambientes" class="tv-tab-panel space-y-3">
+    <div class="flex justify-end">
+      <button id="btn-novo-ambiente" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-3 py-1.5">
+        <i class="fa-solid fa-plus"></i> Novo Ambiente
+      </button>
+    </div>
+    <div class="bg-slate-900/70 border border-slate-800 rounded-xl overflow-hidden">
+      <table class="min-w-full text-xs">
+        <thead class="bg-slate-900/90 text-slate-300 border-b border-slate-800">
+          <tr>
+            <th class="px-3 py-2 text-left">Nome</th>
+            <th class="px-3 py-2 text-left">Status</th>
+            <th class="px-3 py-2 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tv-ambientes-tbody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Tab: TVs ───────────────────────────────────────────────── -->
+  <div id="tv-tab-tvs" class="tv-tab-panel space-y-3 hidden">
+    <div class="flex justify-end">
+      <button id="btn-nova-tv" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-3 py-1.5">
+        <i class="fa-solid fa-plus"></i> Nova TV
+      </button>
+    </div>
+    <div class="bg-slate-900/70 border border-slate-800 rounded-xl overflow-hidden">
+      <table class="min-w-full text-xs">
+        <thead class="bg-slate-900/90 text-slate-300 border-b border-slate-800">
+          <tr>
+            <th class="px-3 py-2 text-left">Nome</th>
+            <th class="px-3 py-2 text-left hidden md:table-cell">Ambiente</th>
+            <th class="px-3 py-2 text-left hidden md:table-cell">Playlist</th>
+            <th class="px-3 py-2 text-left hidden md:table-cell">ID</th>
+            <th class="px-3 py-2 text-left">Status</th>
+            <th class="px-3 py-2 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tv-tvs-tbody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Tab: Grupos (Video Wall) ──────────────────────────────── -->
+  <div id="tv-tab-grupos" class="tv-tab-panel space-y-3 hidden">
+    <div class="flex justify-end">
+      <button id="btn-novo-grupo" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-3 py-1.5">
+        <i class="fa-solid fa-plus"></i> Novo Grupo
+      </button>
+    </div>
+    <div class="bg-slate-900/70 border border-slate-800 rounded-xl overflow-hidden">
+      <table class="min-w-full text-xs">
+        <thead class="bg-slate-900/90 text-slate-300 border-b border-slate-800">
+          <tr>
+            <th class="px-3 py-2 text-left">Nome</th>
+            <th class="px-3 py-2 text-left">Grid</th>
+            <th class="px-3 py-2 text-left">Status</th>
+            <th class="px-3 py-2 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tv-grupos-tbody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Tab: Conteúdos ────────────────────────────────────────── -->
+  <div id="tv-tab-conteudos" class="tv-tab-panel space-y-3 hidden">
+    <div class="flex justify-end">
+      <button id="btn-novo-conteudo" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-3 py-1.5">
+        <i class="fa-solid fa-plus"></i> Novo Conteúdo
+      </button>
+    </div>
+    <div class="bg-slate-900/70 border border-slate-800 rounded-xl overflow-hidden">
+      <table class="min-w-full text-xs">
+        <thead class="bg-slate-900/90 text-slate-300 border-b border-slate-800">
+          <tr>
+            <th class="px-3 py-2 text-left">Nome</th>
+            <th class="px-3 py-2 text-left">Tipo</th>
+            <th class="px-3 py-2 text-left hidden md:table-cell">URL / Arquivo</th>
+            <th class="px-3 py-2 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tv-conteudos-tbody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Tab: Playlists ────────────────────────────────────────── -->
+  <div id="tv-tab-playlists" class="tv-tab-panel space-y-3 hidden">
+    <div class="flex justify-end">
+      <button id="btn-nova-playlist" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-3 py-1.5">
+        <i class="fa-solid fa-plus"></i> Nova Playlist
+      </button>
+    </div>
+    <div class="bg-slate-900/70 border border-slate-800 rounded-xl overflow-hidden">
+      <table class="min-w-full text-xs">
+        <thead class="bg-slate-900/90 text-slate-300 border-b border-slate-800">
+          <tr>
+            <th class="px-3 py-2 text-left">Nome</th>
+            <th class="px-3 py-2 text-left">Itens</th>
+            <th class="px-3 py-2 text-left">Status</th>
+            <th class="px-3 py-2 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tv-playlists-tbody" class="divide-y divide-slate-800 text-slate-300"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       MODAIS
+       ══════════════════════════════════════════════════════════ -->
+
+  <!-- Modal: Ambiente -->
+  <div id="modal-ambiente" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4">
+    <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-5 space-y-4">
+      <h3 class="text-sm font-semibold text-slate-100" id="modal-ambiente-title">Novo Ambiente</h3>
+      <input id="amb-id" type="hidden" />
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Nome do Ambiente</label>
+        <input id="amb-nome" type="text" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Ex: Salão, Área externa" />
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Status</label>
+        <select id="amb-status" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          <option value="A">Ativo</option>
+          <option value="I">Inativo</option>
+        </select>
+      </div>
+      <p id="modal-ambiente-erro" class="hidden text-xs text-red-400"></p>
+      <div class="flex justify-end gap-2 pt-1">
+        <button id="btn-cancelar-ambiente" class="text-xs text-slate-400 hover:text-slate-200 px-3 py-1.5">Cancelar</button>
+        <button id="btn-salvar-ambiente" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-4 py-1.5">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Grupo (Video Wall) -->
+  <div id="modal-grupo" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4">
+    <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-5 space-y-4">
+      <h3 class="text-sm font-semibold text-slate-100" id="modal-grupo-title">Novo Grupo (Video Wall)</h3>
+      <input id="grupo-id" type="hidden" />
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Nome do Grupo</label>
+        <input id="grupo-nome" type="text" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Ex: Video Wall Salão" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <label class="block text-xs font-medium text-slate-300">Colunas</label>
+          <input id="grupo-colunas" type="number" min="1" max="10" value="2" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+        </div>
+        <div class="space-y-1">
+          <label class="block text-xs font-medium text-slate-300">Linhas</label>
+          <input id="grupo-linhas" type="number" min="1" max="10" value="2" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+        </div>
+      </div>
+      <p id="modal-grupo-erro" class="hidden text-xs text-red-400"></p>
+      <div class="flex justify-end gap-2 pt-1">
+        <button id="btn-cancelar-grupo" class="text-xs text-slate-400 hover:text-slate-200 px-3 py-1.5">Cancelar</button>
+        <button id="btn-salvar-grupo" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-4 py-1.5">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: TV -->
+  <div id="modal-tv" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-5 space-y-4">
+      <h3 class="text-sm font-semibold text-slate-100" id="modal-tv-title">Nova TV</h3>
+      <input id="tv-id-field" type="hidden" />
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Nome da TV</label>
+        <input id="tv-nome" type="text" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Ex: TV Salão 1" />
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Ambiente</label>
+        <select id="tv-ambiente-select" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          <option value="">-- Selecione --</option>
+        </select>
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Grupo (Video Wall) — opcional</label>
+        <select id="tv-grupo-select" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          <option value="">-- Nenhum (TV individual) --</option>
+        </select>
+      </div>
+      <div class="space-y-1" id="tv-posicao-field-wrap">
+        <label class="block text-xs font-medium text-slate-300">Posição no grupo (0 = topo-esq)</label>
+        <input id="tv-posicao" type="number" min="0" value="0" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Playlist ativa — opcional</label>
+        <select id="tv-playlist-select" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          <option value="">-- Nenhuma --</option>
+        </select>
+      </div>
+      <p id="modal-tv-erro" class="hidden text-xs text-red-400"></p>
+      <div class="flex justify-end gap-2 pt-1">
+        <button id="btn-cancelar-tv" class="text-xs text-slate-400 hover:text-slate-200 px-3 py-1.5">Cancelar</button>
+        <button id="btn-salvar-tv" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-4 py-1.5">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Conteúdo -->
+  <div id="modal-conteudo" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4">
+    <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-5 space-y-4">
+      <h3 class="text-sm font-semibold text-slate-100" id="modal-conteudo-title">Novo Conteúdo</h3>
+      <input id="conteudo-id" type="hidden" />
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Nome</label>
+        <input id="conteudo-nome" type="text" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Ex: Banner Promoção Julho" />
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Tipo</label>
+        <select id="conteudo-tipo" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          <option value="IMAGEM">Imagem</option>
+          <option value="VIDEO">Vídeo</option>
+        </select>
+      </div>
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">URL do arquivo</label>
+        <input id="conteudo-url" type="text" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="https://..." />
+        <p class="text-[0.65rem] text-slate-500">URL pública acessível pela TV (imagem ou vídeo mp4).</p>
+      </div>
+      <p id="modal-conteudo-erro" class="hidden text-xs text-red-400"></p>
+      <div class="flex justify-end gap-2 pt-1">
+        <button id="btn-cancelar-conteudo" class="text-xs text-slate-400 hover:text-slate-200 px-3 py-1.5">Cancelar</button>
+        <button id="btn-salvar-conteudo" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-4 py-1.5">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Playlist -->
+  <div id="modal-playlist" class="hidden fixed inset-0 z-50 flex items-start justify-center bg-slate-950/80 px-4 pt-12 pb-6">
+    <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-5 space-y-4 overflow-y-auto max-h-[90vh]">
+      <h3 class="text-sm font-semibold text-slate-100" id="modal-playlist-title">Nova Playlist</h3>
+      <input id="playlist-id" type="hidden" />
+      <div class="space-y-1">
+        <label class="block text-xs font-medium text-slate-300">Nome da Playlist</label>
+        <input id="playlist-nome" type="text" class="w-full rounded-lg border border-slate-700 bg-slate-950 text-slate-100 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Ex: Cardápio Almoço" />
+      </div>
+
+      <!-- Itens da playlist -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-medium text-slate-300">Itens da Playlist</label>
+          <button id="btn-add-item-playlist" type="button" class="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300">
+            <i class="fa-solid fa-plus"></i> Adicionar item
+          </button>
+        </div>
+        <div id="playlist-itens-container" class="space-y-2"></div>
+      </div>
+
+      <p id="modal-playlist-erro" class="hidden text-xs text-red-400"></p>
+      <div class="flex justify-end gap-2 pt-1">
+        <button id="btn-cancelar-playlist" class="text-xs text-slate-400 hover:text-slate-200 px-3 py-1.5">Cancelar</button>
+        <button id="btn-salvar-playlist" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium px-4 py-1.5">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+</div>

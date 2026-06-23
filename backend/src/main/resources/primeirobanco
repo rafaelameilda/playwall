@@ -1,0 +1,5 @@
+CREATE SCHEMA prisma;
+CREATE SCHEMA IF NOT EXISTS prisma AUTHORIZATION postgres;
+
+
+

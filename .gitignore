@@ -1,0 +1,115 @@
+############################
+# Compilados / Build
+############################
+backend/target/
+backend/build/
+backend/out/
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/*.ear
+
+############################
+# Logs
+############################
+backend/*.log
+backend/logs/
+backend/log/
+
+############################
+# Arquivos temporários
+############################
+backend/*.tmp
+backend/*.temp
+backend/*.swp
+backend/*.swo
+backend/*~
+
+############################
+# IDE - IntelliJ
+############################
+backend/.idea/
+backend/*.iws
+backend/*.iml
+backend/*.ipr
+
+############################
+# IDE - Eclipse
+############################
+backend/.project
+backend/.classpath
+backend/.settings/
+
+############################
+# IDE - VS Code
+############################
+backend/.vscode/
+.vscode/
+
+############################
+# Sistema Operacional
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# Arquivos de ambiente
+############################
+backend/.env
+backend/.env.*
+backend/application-local.properties
+backend/application-dev.properties
+backend/application-test.properties
+
+############################
+# Spring Boot
+############################
+backend/*.pid
+backend/*.seed
+backend/*.pid.lock
+
+############################
+# Maven
+############################
+backend/.mvn/wrapper/maven-wrapper.jar
+
+############################
+# Gradle
+############################
+backend/.gradle/
+backend/gradle-app.setting
+!backend/gradle/wrapper/gradle-wrapper.jar
+
+############################
+# Docker
+############################
+backend/docker-compose.override.yml
+
+############################
+# Certificados / Segredos
+############################
+backend/*.pem
+backend/*.key
+backend/*.crt
+backend/*.p12
+backend/*.jks
+
+############################
+# Banco de dados local
+############################
+backend/*.db
+backend/*.sqlite
+backend/*.h2.db
+
+############################
+# Uploads / arquivos gerados
+############################
+backend/uploads/
+backend/tmp/
+backend/temp/
+
+############################
+# Testes
+############################
+backend/test-output/
+backend/surefire-reports/

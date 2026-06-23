@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV-Wall - Controle</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <aside class="border-b border-emerald-400/30 bg-gradient-to-r from-emerald-950 via-slate-900 to-cyan-950">
+    <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <p class="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-emerald-400">Desenvolvimento e suporte</p>
+        <p class="mt-1 text-base font-semibold text-white">Wagner de Almeida Silveira</p>
+      </div>
+      <div class="grid gap-2 text-xs text-slate-300 sm:grid-cols-3 sm:gap-5">
+        <a href="tel:+5544998765432" class="group flex items-center gap-2 hover:text-white">
+          <i class="fa-solid fa-headset text-emerald-400"></i>
+          <span><strong class="block text-slate-400">Suporte</strong>44 9 9876 5432</span>
+        </a>
+        <a href="https://www.wagneralmeida.com.br" target="_blank" rel="noopener noreferrer" class="group flex items-center gap-2 hover:text-white">
+          <i class="fa-solid fa-globe text-emerald-400"></i>
+          <span><strong class="block text-slate-400">Site</strong>www.wagneralmeida.com.br</span>
+        </a>
+        <a href="https://www.instagram.com/as__wagner" target="_blank" rel="noopener noreferrer" class="group flex items-center gap-2 hover:text-white">
+          <i class="fa-brands fa-instagram text-emerald-400"></i>
+          <span><strong class="block text-slate-400">Instagram</strong>@as__wagner</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+  <header class="border-b border-slate-800 bg-slate-900/80">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+      <div>
+        <h1 class="text-xl font-semibold">TV-Wall</h1>
+        <p class="text-xs text-slate-400">Controle de ambientes, TVs, conteúdos e playlists</p>
+      </div>
+      <a href="tvwall.html" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600">Abrir painel</a>
+    </div>
+  </header>
+  <main id="tvwall-control" class="mx-auto max-w-7xl px-4 py-6"></main>
+  <div id="toast-container" class="pointer-events-none fixed right-4 top-4 z-[100]"></div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/toast.js"></script>
+  <script src="assets/js/tv-controle.js"></script>
+  <script>
+    fetch('views/tv-controle.html')
+      .then(function (response) {
+        if (!response.ok) throw new Error('Não foi possível carregar a tela de controle.');
+        return response.text();
+      })
+      .then(function (html) {
+        document.getElementById('tvwall-control').innerHTML = html;
+        initTvControle();
+      })
+      .catch(function (error) {
+        document.getElementById('tvwall-control').textContent = error.message;
+      });
+  </script>
+</body>
+</html>

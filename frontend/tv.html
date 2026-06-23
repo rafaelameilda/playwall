@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TV-Wall Player</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        #tv-root {
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ── Modo normal (TV individual) ─────────────────────────── */
+        #tv-media-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #tv-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #tv-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+        }
+
+        /* ── Video wall: a TV recorta a fatia certa da mídia ───────
+           O clip é calculado via JS e aplicado em #tv-wall-clip       */
+        #tv-wall-clip {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        #tv-wall-img {
+            position: absolute;
+            transition: opacity 0.5s ease;
+        }
+
+        #tv-wall-video {
+            position: absolute;
+        }
+
+        /* ── Tela de loading / erro ───────────────────────────────── */
+        #tv-status {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            color: #6ee7b7;
+            font-size: 1rem;
+            gap: 1rem;
+            z-index: 99;
+        }
+
+        #tv-status .tv-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #1e293b;
+            border-top-color: #6ee7b7;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ocultado via JS com style.display */
+
+        /* ── Overlay de ID da TV (toque duplo para mostrar) ───────── */
+        #tv-id-overlay {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: rgba(0,0,0,0.7);
+            color: #6ee7b7;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+            font-family: monospace;
+        }
+        #tv-id-overlay.visible { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<div id="tv-status">
+    <div class="tv-spinner"></div>
+    <span id="tv-status-msg">Iniciando...</span>
+</div>
+
+<div id="tv-root">
+    <!-- Modo TV individual -->
+    <div id="tv-media-container" style="display:none;">
+        <img id="tv-img" src="" alt="" style="display:none;" />
+        <video id="tv-video" src="" style="display:none;" muted autoplay playsinline></video>
+    </div>
+
+    <!-- Modo video wall -->
+    <div id="tv-wall-clip" style="display:none;">
+        <img id="tv-wall-img" src="" alt="" style="display:none;" />
+        <video id="tv-wall-video" src="" style="display:none;" muted autoplay playsinline></video>
+    </div>
+</div>
+
+<div id="tv-id-overlay"></div>
+
+<script>
+(function () {
+    'use strict';
+
+    // ── Configuração da API ──────────────────────────────────────────
+    const origin = window.location.origin;
+    let API_BASE;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        API_BASE = 'http://localhost:8090/tv-wall';
+    } else {
+        API_BASE = origin + '/tv-wall';
+    }
+
+    // ── Lê o ID da TV da URL (?id=UUID ou /tv.html?id=UUID) ─────────
+    const params = new URLSearchParams(window.location.search);
+    const TV_ID = params.get('id') || '';
+
+    // ── Intervalo de polling (ms) ────────────────────────────────────
+    const POLL_INTERVAL_MS = 30000;
+    const PLAYLIST_CACHE_KEY = 'tv-wall-playlist:' + TV_ID;
+
+    // ── Estado interno ───────────────────────────────────────────────
+    let currentData = null;
+    let currentIndex = 0;
+    let itemTimer = null;
+    let pollTimer = null;
+    let isVideoWall = false;
+    let serverClockOffsetMs = 0;
+
+    // ── Elementos ────────────────────────────────────────────────────
+    const $status      = document.getElementById('tv-status');
+    const $statusMsg   = document.getElementById('tv-status-msg');
+    const $mediaBox    = document.getElementById('tv-media-container');
+    const $img         = document.getElementById('tv-img');
+    const $video       = document.getElementById('tv-video');
+    const $wallClip    = document.getElementById('tv-wall-clip');
+    const $wallImg     = document.getElementById('tv-wall-img');
+    const $wallVideo   = document.getElementById('tv-wall-video');
+    const $idOverlay   = document.getElementById('tv-id-overlay');
+
+    // ── Mostra overlay com ID da TV ao clicar duas vezes ────────────
+    $idOverlay.textContent = 'TV ID: ' + (TV_ID || '(não definido)');
+    let overlayHideTimer = null;
+    document.addEventListener('dblclick', function () {
+        $idOverlay.classList.add('visible');
+        clearTimeout(overlayHideTimer);
+        overlayHideTimer = setTimeout(function () {
+            $idOverlay.classList.remove('visible');
+        }, 4000);
+    });
+
+    // ── Funções de status ────────────────────────────────────────────
+    function showStatus(msg) {
+        $statusMsg.textContent = msg;
+        $status.style.display = 'flex';
+    }
+
+    function hideStatus() {
+        $status.style.display = 'none';
+    }
+
+    function cachePlaylist(data) {
+        try {
+            localStorage.setItem(PLAYLIST_CACHE_KEY, JSON.stringify(data));
+        } catch (e) {}
+
+        if (!navigator.serviceWorker) return;
+        navigator.serviceWorker.ready.then(function (registration) {
+            if (registration.active) {
+                registration.active.postMessage({
+                    type: 'CACHE_MEDIA',
+                    tvId: TV_ID,
+                    urls: (data.itens || []).map(function (item) { return item.dsUrlArquivo; })
+                });
+            }
+        }).catch(function () {});
+    }
+
+    function loadCachedPlaylist() {
+        try {
+            const cached = localStorage.getItem(PLAYLIST_CACHE_KEY);
+            return cached ? JSON.parse(cached) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function playlistSignature(data) {
+        return JSON.stringify({
+            idPlaylist: data.idPlaylist,
+            idGrupo: data.idGrupo,
+            nrPosicaoGrupo: data.nrPosicaoGrupo,
+            nrColunas: data.nrColunas,
+            nrLinhas: data.nrLinhas,
+            itens: data.itens || []
+        });
+    }
+
+    // ── Aplica recorte do video wall ─────────────────────────────────
+    // Posição: 0-based, linha-major. Ex.: grid 1x2, pos=0→esq, pos=1→dir
+    function applyWallClip(cols, rows, pos) {
+        const col = pos % cols;
+        const row = Math.floor(pos / cols);
+
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+
+        const totalW = W * cols;
+        const totalH = H * rows;
+
+        const offsetX = -(col * W);
+        const offsetY = -(row * H);
+
+        [$wallImg, $wallVideo].forEach(function (el) {
+            el.style.width  = totalW + 'px';
+            el.style.height = totalH + 'px';
+            el.style.left   = offsetX + 'px';
+            el.style.top    = offsetY + 'px';
+        });
+    }
+
+    // ── Exibe um item (imagem ou vídeo) ──────────────────────────────
+    // offsetMs: quantos ms já passaram neste item (usado na sincronização por relógio)
+    function showItem(item, offsetMs) {
+        const isImage   = item.tpConteudo === 'IMAGEM';
+        const totalMs   = (item.qtSegundos || 10) * 1000;
+        const durMs     = Math.max(totalMs - (offsetMs || 0), 500); // tempo restante
+
+        if (isVideoWall) {
+            // Modo video wall
+            $mediaBox.style.display = 'none';
+            $wallClip.style.display = 'block';
+
+            const info = currentData;
+            const cols = info.nrColunas || 1;
+            const rows = info.nrLinhas  || 1;
+            // nrPosicaoGrupo pode ser 0 — não usar || 0 pois 0 é falsy
+            const pos  = (info.nrPosicaoGrupo != null) ? info.nrPosicaoGrupo : 0;
+
+            // Aplica dimensões ANTES de mostrar a mídia
+            applyWallClip(cols, rows, pos);
+
+            if (isImage) {
+                $wallVideo.style.display = 'none';
+                $wallVideo.pause();
+
+                $wallImg.style.opacity = '0';
+                $wallImg.style.display = 'none'; // oculta até estar pronto
+
+                // Limpa handlers anteriores
+                $wallImg.onload  = null;
+                $wallImg.onerror = null;
+
+                var _cols = cols, _rows = rows, _pos = pos;
+
+                $wallImg.onload = function () {
+                    applyWallClip(_cols, _rows, _pos);
+                    $wallClip.style.display = 'block';
+                    $wallImg.style.display = 'block';
+                    void $wallImg.offsetWidth;
+                    $wallImg.style.opacity = '1';
+                    hideStatus();
+                };
+                $wallImg.onerror = function () {
+                    showStatus('Erro ao carregar imagem: ' + item.dsUrlArquivo);
+                };
+
+                $wallImg.src = '';
+                $wallImg.src = item.dsUrlArquivo;
+                itemTimer = setTimeout(nextItem, durMs);
+            } else {
+                $wallImg.style.display   = 'none';
+                $wallVideo.onended  = null;
+                $wallVideo.oncanplay = null;
+                $wallVideo.onloadedmetadata = null;
+                $wallVideo.style.display = 'block';
+                var wallVideoStartedAt = Date.now();
+                var wallVideoDeadline = wallVideoStartedAt + durMs;
+                var seekWallVideo = function () {
+                    var elapsedSeconds = ((offsetMs || 0) + (Date.now() - wallVideoStartedAt)) / 1000;
+                    if (Number.isFinite($wallVideo.duration)) {
+                        elapsedSeconds = Math.min(elapsedSeconds, Math.max($wallVideo.duration - 0.05, 0));
+                    }
+                    try { $wallVideo.currentTime = elapsedSeconds; } catch (e) {}
+                };
+                $wallVideo.onloadedmetadata = seekWallVideo;
+                $wallVideo.oncanplay = function () {
+                    $wallVideo.oncanplay = null;
+                    seekWallVideo();
+                    $wallVideo.play().catch(function () {});
+                    hideStatus();
+                    itemTimer = setTimeout(nextItem, Math.max(wallVideoDeadline - Date.now(), 50));
+                };
+                $wallVideo.src = '';
+                $wallVideo.src = item.dsUrlArquivo;
+                $wallVideo.load();
+            }
+
+        } else {
+            // Modo TV individual
+            $wallClip.style.display  = 'none';
+            $mediaBox.style.display  = 'block';
+
+            if (isImage) {
+                $video.pause();
+                $video.style.display = 'none';
+                $img.style.display = 'block';
+                $img.style.opacity = '0';
+                $img.src = item.dsUrlArquivo;
+                $img.onload = function () {
+                    $img.style.opacity = '1';
+                    hideStatus();
+                };
+                itemTimer = setTimeout(nextItem, durMs);
+            } else {
+                $img.style.display   = 'none';
+                $video.onended   = null;
+                $video.oncanplay = null;
+                $video.style.display = 'block';
+                $video.src = '';
+                $video.src = item.dsUrlArquivo;
+                $video.load();
+                var _durMs = durMs;
+                $video.oncanplay = function () {
+                    $video.oncanplay = null;
+                    $video.play().catch(function () {});
+                    hideStatus();
+                    $video.onended = function () {
+                        clearTimeout(itemTimer);
+                        nextItem();
+                    };
+                    itemTimer = setTimeout(nextItem, _durMs);
+                };
+            }
+        }
+    }
+
+    // ── Avança para o próximo item ────────────────────────────────────
+    function nextItem() {
+        clearTimeout(itemTimer);
+        const itens = currentData && currentData.itens;
+        if (!itens || itens.length === 0) return;
+        if (isVideoWall) {
+            // Resincroniza pelo relógio ao trocar item
+            var sync = calcSyncIndex(itens);
+            currentIndex = sync.index;
+            showItem(itens[currentIndex], sync.offsetMs);
+        } else {
+            currentIndex = (currentIndex + 1) % itens.length;
+            showItem(itens[currentIndex], 0);
+        }
+    }
+
+    // ── Calcula o índice sincronizado pelo relógio ───────────────────
+    // Todas as TVs do mesmo grupo calculam o mesmo índice no mesmo instante.
+    // Retorna { index, offsetMs } onde offsetMs é quantos ms já passaram no item atual.
+    function calcSyncIndex(itens) {
+        var totalMs = itens.reduce(function (acc, item) {
+            return acc + (item.qtSegundos || 10) * 1000;
+        }, 0);
+        if (totalMs === 0) return { index: 0, offsetMs: 0 };
+
+        var now      = Date.now() + serverClockOffsetMs;
+        var posMs    = now % totalMs; // posição dentro do ciclo atual
+        var acc      = 0;
+        for (var i = 0; i < itens.length; i++) {
+            var dur = (itens[i].qtSegundos || 10) * 1000;
+            if (posMs < acc + dur) {
+                return { index: i, offsetMs: posMs - acc };
+            }
+            acc += dur;
+        }
+        return { index: 0, offsetMs: 0 };
+    }
+
+    // ── Inicia ou reinicia a reprodução ──────────────────────────────
+    function startPlayback(data) {
+        clearTimeout(itemTimer);
+        currentData  = data;
+        isVideoWall  = !!(data.idGrupo);
+
+        const itens = data.itens || [];
+        if (itens.length === 0) {
+            showStatus('Nenhum conteúdo configurado para esta TV.');
+            return;
+        }
+
+        if (isVideoWall) {
+            // Sincroniza pelo relógio para todas as TVs do grupo
+            var sync = calcSyncIndex(itens);
+            currentIndex = sync.index;
+            showItem(itens[currentIndex], sync.offsetMs);
+        } else {
+            currentIndex = 0;
+            hideStatus();
+            showItem(itens[0], 0);
+        }
+    }
+
+    // ── Busca dados da TV no backend ─────────────────────────────────
+    function fetchPlayerData() {
+        if (!TV_ID) {
+            showStatus('ID da TV não informado. Use: tv.html?id=SEU-ID');
+            return;
+        }
+
+        const requestStartedAt = Date.now();
+        fetch(API_BASE + '/tv/player/' + encodeURIComponent(TV_ID), { cache: 'no-store' })
+            .then(function (res) {
+                if (!res.ok) {
+                    return res.json().then(function (err) {
+                        throw new Error(err.message || 'TV não encontrada.');
+                    });
+                }
+                return res.json();
+            })
+            .then(function (data) {
+                if (data.serverTimeMs) {
+                    const requestMidpoint = (requestStartedAt + Date.now()) / 2;
+                    serverClockOffsetMs = data.serverTimeMs - requestMidpoint;
+                }
+                cachePlaylist(data);
+
+                // Se a playlist mudou, reinicia do início; senão mantém posição
+                const playlistChanged = !currentData ||
+                    playlistSignature(currentData) !== playlistSignature(data);
+
+                if (playlistChanged) {
+                    startPlayback(data);
+                } else {
+                    currentData = data;
+                }
+            })
+            .catch(function (err) {
+                if (currentData) return;
+
+                const cached = loadCachedPlaylist();
+                if (cached) {
+                    startPlayback(cached);
+                } else {
+                    showStatus('Sem conexao e sem conteudo salvo neste aparelho.');
+                }
+            });
+    }
+
+    // ── Polling periódico ────────────────────────────────────────────
+    function startPolling() {
+        clearInterval(pollTimer);
+        pollTimer = setInterval(fetchPlayerData, POLL_INTERVAL_MS);
+    }
+
+    // ── Inicialização ────────────────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('tv-sw.js').catch(function () {});
+    }
+
+    showStatus('Carregando...');
+    fetchPlayerData();
+    startPolling();
+
+    // Reaplica recorte do wall se a janela for redimensionada
+    window.addEventListener('resize', function () {
+        if (isVideoWall && currentData) {
+            applyWallClip(
+                currentData.nrColunas || 1,
+                currentData.nrLinhas  || 1,
+                (currentData.nrPosicaoGrupo != null) ? currentData.nrPosicaoGrupo : 0
+            );
+        }
+    });
+
+})();
+</script>
+</body>
+</html>
