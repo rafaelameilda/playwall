@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: tvwall-postgres
+
+    environment:
+      POSTGRES_DB: prismadb
+      POSTGRES_USER: administrador
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: tvwall-backend
+
+    depends_on:
+      - postgres
+
+    ports:
+      - "8090:8090"
+
+    volumes:
+      - ./backend:/app
+
+    working_dir: /app
+
+    command: mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+  frontend:
+    image: nginx:alpine
+
+    ports:
+      - "5501:80"
+
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+
+volumes:
+  postgres_data:
